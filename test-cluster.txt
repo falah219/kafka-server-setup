@@ -1,0 +1,83 @@
+Langkah 6: Cek Cluster Kafka Aktif
+
+6.1 Lihat Kafka Broker Terhubung
+Di salah satu server, jalankan:
+
+/opt/kafka/bin/zookeeper-shell.sh 192.168.4.3:2181 ls /brokers/ids
+
+Hasil:
+[1, 2, 3, 4]
+
+Artinya 4 broker aktif dan terhubung.
+
+
+Langkah 7: Uji Coba Producer & Consumer (Dengan JAAS)
+
+7.1 Buat File JAAS Client
+
+nano /opt/kafka/config/kafka_client_jaas.conf
+Isi:
+
+KafkaClient {
+   org.apache.kafka.common.security.plain.PlainLoginModule required
+   username="admin"
+   password="admin-secret";
+};
+
+
+7.2 Buat Topik
+
+export KAFKA_OPTS="-Djava.security.auth.login.config=/opt/kafka/config/kafka_client_jaas.conf"
+
+/opt/kafka/bin/kafka-topics.sh --create \
+--topic test-topic4 \
+--bootstrap-server 10.14.73.26:9092 \
+--partitions 1 --replication-factor 1 \
+--command-config <(echo -e "security.protocol=SASL_PLAINTEXT\nsasl.mechanism=PLAIN")
+7.3 Kirim Pesan (Producer)
+
+
+
+/opt/kafka/bin/kafka-console-producer.sh \
+--broker-list 10.14.73.26:9092 \
+--topic test-topic-3 \
+--producer.config <(echo -e "security.protocol=SASL_PLAINTEXT\nsasl.mechanism=PLAIN")
+
+Ketik pesan dan tekan Enter, misal:
+Halo Kafka!
+
+
+7.4 Terima Pesan (Consumer)
+
+/opt/kafka/bin/kafka-console-consumer.sh \
+--bootstrap-server 10.14.73.26:9092 \
+--topic test-topic \
+--from-beginning \
+--consumer.config <(echo -e "security.protocol=SASL_PLAINTEXT\nsasl.mechanism=PLAIN")
+
+
+
+
+
+
+/opt/kafka/bin/kafka-console-producer.sh \
+  --broker-list 10.14.73.26:9092 \
+  --topic test-topic \
+  --producer.config /tmp/client.properties
+
+
+/opt/kafka/bin/kafka-console-consumer.sh \
+  --bootstrap-server 10.14.73.26:9092 \
+  --topic test-topic \
+  --from-beginning \
+  --consumer.config /tmp/client.properties
+
+
+  get /brokers/ids/1
+{"features":{},"listener_security_protocol_map":{"SASL_PLAINTEXT":"SASL_PLAINTEXT"},"endpoints":["SASL_PLAINTEXT://10.14.73.26:9092"],"jmx_port":-1,"port":-1,"host":null,"version":5,"timestamp":"1743320932216"}
+get /brokers/ids/2
+{"features":{},"listener_security_protocol_map":{"SASL_PLAINTEXT":"SASL_PLAINTEXT"},"endpoints":["SASL_PLAINTEXT://10.14.73.59:9092"],"jmx_port":-1,"port":-1,"host":null,"version":5,"timestamp":"1743291603545"}
+get /brokers/ids/3
+{"features":{},"listener_security_protocol_map":{"SASL_PLAINTEXT":"SASL_PLAINTEXT"},"endpoints":["SASL_PLAINTEXT://10.14.72.166:9092"],"jmx_port":-1,"port":-1,"host":null,"version":5,"timestamp":"1743291576730"}
+get /brokers/ids/4
+{"features":{},"listener_security_protocol_map":{"SASL_PLAINTEXT":"SASL_PLAINTEXT"},"endpoints":["SASL_PLAINTEXT://10.14.73.27:9092"],"jmx_port":-1,"port":-1,"host":null,"version":5,"timestamp":"1743291627711"}

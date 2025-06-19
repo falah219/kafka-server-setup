@@ -1,0 +1,23 @@
+version: 'version' # required to use version: '3.7'
+
+services:
+  kadeck:
+    image: xeotek/kadeck:5.2.3
+    container_name: kadeck
+    ports:
+      - "666:666"
+    networks:
+      - polatix
+    environment:
+      - xeotek_kadeck_free=your_email@address.com
+      - xeotek_kadeck_port=666
+    volumes:
+      - kadeck_data:/root/.kadeck/
+
+volumes:
+  kadeck_data:
+
+
+networks:
+  app-tier:
+    external: true

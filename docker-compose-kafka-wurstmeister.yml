@@ -1,0 +1,49 @@
+# https://github.com/wurstmeister/kafka-docker/issues/532
+
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper
+    # image: wurstmeister/zookeeper:3.4.6
+    # image: bitnami/zookeeper:3.4.13
+    container_name: zookeeper-server
+    hostname: zookeeper-server
+    ports:
+      - "2181:2181"
+    networks:
+      - app-tier
+    restart: always
+
+  kafka-server:
+    image: wurstmeister/kafka
+    # image: wurstmeister/kafka:2.13-2.8.1
+    # image: bitnami/kafka:2.8.1
+    container_name: kafka-server
+    hostname: kafka-server
+    ports:
+      - "9092:9092"
+    networks:
+      - app-tier
+    environment:
+      # KAFKA_LISTENERS: SASL_PLAINTEXT://:9092
+      KAFKA_LISTENERS: SASL_PLAINTEXT://0.0.0.0:9092
+      # KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://kafka-server:9092
+      # KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-server:2181
+      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
+      KAFKA_INTER_BROKER_LISTENER_NAME: SASL_PLAINTEXT
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      # KAFKA_MESSAGE_MAX_BYTES: 500000000
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./kafka_server_jaas-wurstmeister.conf:/etc/kafka/kafka_server_jaas.conf
+      - /opt/kafka-server/kafka_data:/kafka
+    restart: always
+    links:
+      - zookeeper
+
+networks:
+  app-tier:
+    external: true
